@@ -324,10 +324,16 @@ add_action( 'wp_insert_comment', 'classifyr_auto_check_update_meta', 10, 2 );
 
 function classifyr_check_comment($comment){
   $req = json_encode(array('url' => $comment['comment_author_url'],
-                           'message' => $comment['comment_author_IP'] . $comment['comment_content']));
+                           'message' => $comment['comment_author_IP'] . " " . $comment['comment_content']));
   $resp = classifyr_http_post($req, $classifyr_api_host, '/api/simple-spam/classify', $classifyr_api_port);
+  return $resp;
+}
 
-  
+function classifyr_learn_comment($comment, $cat){
+  $req = json_encode(array('url' => $comment['comment_author_url'],
+                           'message' => $comment['comment_author_IP'] . " " . $comment['comment_content'],
+                           'category' => $cat));
+  $resp = classifyr_http_post($req, $classifyr_api_host, '/api/simple-spam/learn', $classifyr_api_port);
   return $resp;
 }
 

@@ -539,7 +539,7 @@ function classifyr_submit_nonspam_comment ( $comment_id ) {
 	$post = get_post( $comment->comment_post_ID );
 	$comment->comment_post_modified_gmt = $post->post_modified_gmt;
 
-  $response = classifyr_check_comment($comment);
+  $response = classifyr_learn_comment($comment, 'ham');
 
 	if ( $comment->reporter ) {
 		classifyr_update_comment_history( $comment_id, sprintf( __('%s reported this comment as not spam'), $comment->reporter ), 'report-ham' );
@@ -588,7 +588,7 @@ function classifyr_submit_spam_comment ( $comment_id ) {
 	$post = get_post( $comment->comment_post_ID );
 	$comment->comment_post_modified_gmt = $post->post_modified_gmt;
 
-  $response = classifyr_check_comment($comment);
+  $response = classifyr_learn_comment($comment, 'spam');
 
 	if ( $comment->reporter ) {
 		classifyr_update_comment_history( $comment_id, sprintf( __('%s reported this comment as spam'), $comment->reporter ), 'report-spam' );
