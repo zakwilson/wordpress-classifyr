@@ -292,7 +292,7 @@ function classifyr_auto_check_update_meta( $id, $comment ) {
 		if ( intval($classifyr_last_comment['comment_post_ID']) == intval($comment->comment_post_ID)
 			&& $classifyr_last_comment['comment_author'] == $comment->comment_author
 			&& $classifyr_last_comment['comment_author_email'] == $comment->comment_author_email ) {
-				// normal result: true or false
+				// normal result: spam or ham
 				if ( $classifyr_last_comment['classifyr_result'] == 'spam' ) {
 					update_comment_meta( $comment->comment_ID, 'classifyr_result', 'spam' );
 					classifyr_update_comment_history( $comment->comment_ID, __('Classifyr caught this comment as spam'), 'check-spam' );
@@ -411,7 +411,7 @@ function classifyr_auto_check_comment( $commentdata ) {
 		}
 	}
 	
-	// if the response is neither true nor false, hold the comment for moderation and schedule a recheck
+	// if the response is neither ham nor spam, hold the comment for moderation and schedule a recheck
 	if ( 'spam' != $response[1] && 'ham' != $response[1] ) {
 		if ( !current_user_can('moderate_comments') ) {
 			add_filter('pre_comment_approved', 'classifyr_result_hold');
@@ -548,9 +548,9 @@ function classifyr_cron_recheck() {
 		$status = classifyr_check_db_comment( $comment_id, 'retry' );
 
 		$msg = '';
-		if ( $status == 'true' ) {
+		if ( $status == 'spam' ) {
 			$msg = __( 'Classifyr caught this comment as spam during an automatic retry.' );
-		} elseif ( $status == 'false' ) {
+		} elseif ( $status == 'ham' ) {
 			$msg = __( 'Classifyr cleared this comment during an automatic retry.' );
 		}
 		
@@ -564,9 +564,9 @@ function classifyr_cron_recheck() {
 			// make sure the comment status is still pending.  if it isn't, that means the user has already moved it elsewhere.
 			$comment = get_comment( $comment_id );
 			if ( $comment && 'unapproved' == wp_get_comment_status( $comment_id ) ) {
-				if ( $status == 'true' ) {
+				if ( $status == 'spam' ) {
 					wp_spam_comment( $comment_id );
-				} elseif ( $status == 'false' ) {
+				} elseif ( $status == 'ham' ) {
 					// comment is good, but it's still in the pending queue.  depending on the moderation settings
 					// we may need to change it to approved.
 					if ( check_comment($comment->comment_author, $comment->comment_author_email, $comment->comment_author_url, $comment->comment_content, $comment->comment_author_IP, $comment->comment_agent, $comment->comment_type) )
