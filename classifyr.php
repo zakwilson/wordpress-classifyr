@@ -293,13 +293,13 @@ function classifyr_auto_check_update_meta( $id, $comment ) {
 			&& $classifyr_last_comment['comment_author'] == $comment->comment_author
 			&& $classifyr_last_comment['comment_author_email'] == $comment->comment_author_email ) {
 				// normal result: true or false
-				if ( $classifyr_last_comment['classifyr_result'] == 'true' ) {
-					update_comment_meta( $comment->comment_ID, 'classifyr_result', 'true' );
+				if ( $classifyr_last_comment['classifyr_result'] == 'spam' ) {
+					update_comment_meta( $comment->comment_ID, 'classifyr_result', 'spam' );
 					classifyr_update_comment_history( $comment->comment_ID, __('Classifyr caught this comment as spam'), 'check-spam' );
 					if ( $comment->comment_approved != 'spam' )
 						classifyr_update_comment_history( $comment->comment_ID, sprintf( __('Comment status was changed to %s'), $comment->comment_approved), 'status-changed'.$comment->comment_approved );
-				} elseif ( $classifyr_last_comment['classifyr_result'] == 'false' ) {
-					update_comment_meta( $comment->comment_ID, 'classifyr_result', 'false' );
+				} elseif ( $classifyr_last_comment['classifyr_result'] == 'ham' ) {
+					update_comment_meta( $comment->comment_ID, 'classifyr_result', 'ham' );
 					classifyr_update_comment_history( $comment->comment_ID, __('Classifyr cleared this comment'), 'check-ham' );
 					if ( $comment->comment_approved == 'spam' ) {
 						if ( wp_blacklist_check($comment->comment_author, $comment->comment_author_email, $comment->comment_author_url, $comment->comment_content, $comment->comment_author_IP, $comment->comment_agent) )
@@ -330,8 +330,8 @@ function classifyr_check_comment($comment){
 }
 
 function classifyr_learn_comment($comment, $cat){
-  $req = json_encode(array('url' => $comment['comment_author_url'],
-                           'message' => $comment['comment_author_IP'] . " " . $comment['comment_content'],
+  $req = json_encode(array('url' => $comment->comment_author_url,
+                           'message' => $comment->comment_author_ip . " " . $comment->comment_content,
                            'category' => $cat));
   $resp = classifyr_http_post($req, $classifyr_api_host, '/api/simple-spam/learn', $classifyr_api_port);
   return $resp;
