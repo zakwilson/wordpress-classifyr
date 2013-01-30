@@ -349,6 +349,8 @@ function classifyr_comment_row_action( $a, $comment ) {
 			$desc = __( 'Flagged as spam by Classifyr' );
 		elseif ( $classifyr_result == 'ham' && $comment_status == 'spam' )
 			$desc = __( 'Cleared by Classifyr' );
+    elseif ( $classifyr_result == 'unknown' && $comment_status != 'spam' )
+      $desc = __( 'Needs human intervention' );
 	} else {
 		$who = get_comment_meta( $comment->comment_ID, 'classifyr_user', true );
 		if ( $user_result == 'true' )
@@ -703,20 +705,20 @@ function classifyr_recheck_queue() {
 		add_comment_meta( $c['comment_ID'], 'classifyr_rechecking', true );
 		if ( 'spam' == $response[1] ) {
 			wp_set_comment_status($c['comment_ID'], 'spam');
-			update_comment_meta( $c['comment_ID'], 'classifyr_result', 'true' );
+			update_comment_meta( $c['comment_ID'], 'classifyr_result', 'spam' );
 			delete_comment_meta( $c['comment_ID'], 'classifyr_error' );
 			classifyr_update_comment_history( $c['comment_ID'], __('Classifyr re-checked and caught this comment as spam'), 'check-spam' );
 		
 		} elseif ( 'ham' == $response[1] ) {
-			update_comment_meta( $c['comment_ID'], 'classifyr_result', 'false' );
+			update_comment_meta( $c['comment_ID'], 'classifyr_result', 'ham' );
 			delete_comment_meta( $c['comment_ID'], 'classifyr_error' );
 			classifyr_update_comment_history( $c['comment_ID'], __('Classifyr re-checked and cleared this comment'), 'check-ham' );
       // unknown result
     } elseif ( 'unknown' == $response[1] ){
-      update_comment_meta( $c['comment_ID'], 'classifyr_result', 'error' );
+      update_comment_meta( $c['comment_ID'], 'classifyr_result', 'unknown' );
+			delete_comment_meta( $c['comment_ID'], 'classifyr_error' );
 			classifyr_update_comment_history( $c['comment_ID'], sprintf( __('This comment is too close to call'), substr($response[1], 0, 50)), 'check-error' );
-    }
-		// abnormal result: error
+      // abnormal result: error
 		} else {
 			update_comment_meta( $c['comment_ID'], 'classifyr_result', 'error' );
 			classifyr_update_comment_history( $c['comment_ID'], sprintf( __('Classifyr was unable to re-check this comment (response: %s)'), substr($response[1], 0, 50)), 'check-error' );
