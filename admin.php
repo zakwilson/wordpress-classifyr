@@ -510,9 +510,10 @@ function classifyr_learn_approved_button($comment_status) {
 	if ( 'approved' == $comment_status ) {
     $link = 'admin.php?action=classifyr_learn_approved';
     echo "</div><div class='alignleft'><a class='button-secondary learnapproved' href='$link'>" . __('Learn approved') . "</a>";
+  }
 }
 add_action('manage_comments_nav', 'classifyr_learn_approved_button');
-}
+
 
 function classifyr_submit_nonspam_comment ( $comment_id ) {
 	global $wpdb, $classifyr_api_host, $classifyr_api_port, $current_user, $current_site;
