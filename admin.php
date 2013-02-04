@@ -503,7 +503,16 @@ function classifyr_check_for_spam_button($comment_status) {
 		$link = 'edit-comments.php?page=classifyr-admin&amp;recheckqueue=true&amp;noheader=true';
 	echo "</div><div class='alignleft'><a class='button-secondary checkforspam' href='$link'>" . __('Check for Spam') . "</a>";
 }
+
 add_action('manage_comments_nav', 'classifyr_check_for_spam_button');
+
+function classifyr_learn_approved_button($comment_status) {
+	if ( 'approved' == $comment_status ) {
+    $link = 'admin.php?action=classifyr_learn_approved';
+    echo "</div><div class='alignleft'><a class='button-secondary learnapproved' href='$link'>" . __('Learn approved') . "</a>";
+}
+add_action('manage_comments_nav', 'classifyr_learn_approved_button');
+}
 
 function classifyr_submit_nonspam_comment ( $comment_id ) {
 	global $wpdb, $classifyr_api_host, $classifyr_api_port, $current_user, $current_site;
@@ -672,6 +681,35 @@ function classifyr_spam_count( $type = false ) {
 	return (int) $wpdb->get_var("SELECT COUNT(comment_ID) FROM $wpdb->comments WHERE comment_approved = 'spam' AND comment_type='$type'");
 }
 
+function classifyr_learn_approved() {
+	if ( !( isset( $_REQUEST['action'] ) && 'classifyr_learn_approved' == $_REQUEST['action'] ) )
+		return;
+
+  $approved = $wpdb->get_results( "SELECT * FROM $wpdb->comments WHERE comment_approved = '1'", ARRAY_A );
+	foreach ( (array) $moderation as $c ) {
+		$c['user_ip']    = $c['comment_author_IP'];
+		$c['user_agent'] = $c['comment_agent'];
+		$c['referrer']   = '';
+		$c['blog']       = get_bloginfo('url');
+		$c['blog_lang']  = get_locale();
+		$c['blog_charset'] = get_option('blog_charset');
+		$c['permalink']  = get_permalink($c['comment_post_ID']);
+
+		$c['user_role'] = '';
+		if ( isset( $c['user_ID'] ) )
+			$c['user_role']  = classifyr_get_user_roles($c['user_ID']);
+
+		if ( classifyr_test_mode() )
+			$c['is_test'] = 'true';
+
+		$id = (int) $c['comment_ID'];
+
+    $response = classifyr_learn_comment($c, "ham");
+    wp_safe_redirect( $_SERVER['HTTP_REFERER'] );
+  }
+}
+
+add_action('admin_action_classifyr_learn_approved', 'classifyr_learn_approved');
 
 function classifyr_recheck_queue() {
 	global $wpdb, $classifyr_api_host, $classifyr_api_port;

@@ -3,29 +3,29 @@
  * @package Classifyr
  */
 /*
-Plugin Name: Classifyr
-Plugin URI: http://classifyr.com/?return=true
-Description: Used by few, classifyr.com is meant to outperform Akismet. This Wordpress plugin is, however a fork of Akismet's. To get started: (note: private beta right now, you can't sign up this way yet) 1) Click the "Activate" link to the left of this description, 2) <s><a href="http://classifyr.com/get/?return=true">Sign up for an Classifyr API key</a></s>, and 3) Go to your <a href="admin.php?page=classifyr-key-config">Classifyr configuration</a> page, and save your API key.
-Version: 0.0.1
-Author: classifyr.com
-Author URI: http://classifyr.com/wordpress/
-License: GPLv2 or later
+  Plugin Name: Classifyr
+  Plugin URI: http://classifyr.com/?return=true
+  Description: Used by few, classifyr.com is meant to outperform Akismet. This Wordpress plugin is, however a fork of Akismet's. To get started: (note: private beta right now, you can't sign up this way yet) 1) Click the "Activate" link to the left of this description, 2) <s><a href="http://classifyr.com/get/?return=true">Sign up for an Classifyr API key</a></s>, and 3) Go to your <a href="admin.php?page=classifyr-key-config">Classifyr configuration</a> page, and save your API key.
+  Version: 0.0.1
+  Author: classifyr.com
+  Author URI: http://classifyr.com/wordpress/
+  License: GPLv2 or later
 */
 
 /*
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
+  This program is free software; you can redistribute it and/or
+  modify it under the terms of the GNU General Public License
+  as published by the Free Software Foundation; either version 2
+  of the License, or (at your option) any later version.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 define('CLASSIFYR_VERSION', '0.0.1');
@@ -46,17 +46,17 @@ if ( !function_exists( 'add_action' ) ) {
 if ( isset($wp_db_version) && $wp_db_version <= 9872 )
 	include_once dirname( __FILE__ ) . '/legacy.php';
 
-include_once dirname( __FILE__ ) . '/widget.php';
+                                   include_once dirname( __FILE__ ) . '/widget.php';
 
-if ( is_admin() )
-	require_once dirname( __FILE__ ) . '/admin.php';
+                                                                    if ( is_admin() )
+                                                                      require_once dirname( __FILE__ ) . '/admin.php';
 
-function classifyr_init() {
-	global $wpcom_api_key, $classifyr_api_host, $classifyr_api_port;
-  $classifyr_api_host = 'classifyr.com';
+                                                                                                       function classifyr_init() {
+                                                                                                         global $wpcom_api_key, $classifyr_api_host, $classifyr_api_port;
+                                                                                                         $classifyr_api_host = 'classifyr.com';
 
-	$classifyr_api_port = 80;
-}
+                                                                                                         $classifyr_api_port = 80;
+                                                                                                       }
 add_action('init', 'classifyr_init');
 
 function classifyr_get_key() {
@@ -156,7 +156,7 @@ function classifyr_http_post($request, $host, $path, $port = 80, $ip=null) {
 		$http_host = $host;
 	}
 
-  $http_host = "classifyr.com"; //FIXME - this host nonsense should go
+  $http_host = "classifyr.com"; //FIXME - this host nonsense should go FIXME
 	
 	// use the WP HTTP class if it is available
 	if ( function_exists( 'wp_remote_post' ) ) {
@@ -172,7 +172,7 @@ function classifyr_http_post($request, $host, $path, $port = 80, $ip=null) {
                                              ),
                        'httpversion'	=> '1.0',
                        'timeout'		=> 15
-		);
+                       );
 
 		$classifyr_url = "http://{$http_host}{$path}";
 		$response = wp_remote_post( $classifyr_url, $http_args );
@@ -251,11 +251,11 @@ function classifyr_update_comment_history( $comment_id, $message, $event=null ) 
 		$user = $current_user->user_login;
 
 	$event = array(
-		'time' => classifyr_microtime(),
-		'message' => $message,
-		'event' => $event,
-		'user' => $user,
-	);
+                 'time' => classifyr_microtime(),
+                 'message' => $message,
+                 'event' => $event,
+                 'user' => $user,
+                 );
 
 	// $unique = false so as to allow multiple values per comment
 	$r = add_comment_meta( $comment_id, 'classifyr_history', $event, false );
@@ -290,32 +290,34 @@ function classifyr_auto_check_update_meta( $id, $comment ) {
 	// as was checked by classifyr_auto_check_comment
 	if ( is_object($comment) && !empty($classifyr_last_comment) && is_array($classifyr_last_comment) ) {
 		if ( intval($classifyr_last_comment['comment_post_ID']) == intval($comment->comment_post_ID)
-			&& $classifyr_last_comment['comment_author'] == $comment->comment_author
-			&& $classifyr_last_comment['comment_author_email'] == $comment->comment_author_email ) {
-				// normal result: spam or ham
-				if ( $classifyr_last_comment['classifyr_result'] == 'spam' ) {
-					update_comment_meta( $comment->comment_ID, 'classifyr_result', 'spam' );
-					classifyr_update_comment_history( $comment->comment_ID, __('Classifyr caught this comment as spam'), 'check-spam' );
-					if ( $comment->comment_approved != 'spam' )
-						classifyr_update_comment_history( $comment->comment_ID, sprintf( __('Comment status was changed to %s'), $comment->comment_approved), 'status-changed'.$comment->comment_approved );
-				} elseif ( $classifyr_last_comment['classifyr_result'] == 'ham' ) {
-					update_comment_meta( $comment->comment_ID, 'classifyr_result', 'ham' );
-					classifyr_update_comment_history( $comment->comment_ID, __('Classifyr cleared this comment'), 'check-ham' );
-					if ( $comment->comment_approved == 'spam' ) {
-						if ( wp_blacklist_check($comment->comment_author, $comment->comment_author_email, $comment->comment_author_url, $comment->comment_content, $comment->comment_author_IP, $comment->comment_agent) )
-							classifyr_update_comment_history( $comment->comment_ID, __('Comment was caught by wp_blacklist_check'), 'wp-blacklisted' );
-						else
-							classifyr_update_comment_history( $comment->comment_ID, sprintf( __('Comment status was changed to %s'), $comment->comment_approved), 'status-changed-'.$comment->comment_approved );
-					}
+         && $classifyr_last_comment['comment_author'] == $comment->comment_author
+         && $classifyr_last_comment['comment_author_email'] == $comment->comment_author_email ) {
+      // normal result: spam or ham
+      if ( $classifyr_last_comment['classifyr_result'] == 'spam' ) {
+        update_comment_meta( $comment->comment_ID, 'classifyr_result', 'spam' );
+        classifyr_update_comment_history( $comment->comment_ID, __('Classifyr caught this comment as spam'), 'check-spam' );
+        if ( $comment->comment_approved != 'spam' )
+          classifyr_update_comment_history( $comment->comment_ID, sprintf( __('Comment status was changed to %s'), $comment->comment_approved), 'status-changed'.$comment->comment_approved );
+      } elseif ( $classifyr_last_comment['classifyr_result'] == 'ham' ) {
+        update_comment_meta( $comment->comment_ID, 'classifyr_result', 'ham' );
+        classifyr_update_comment_history( $comment->comment_ID, __('Classifyr cleared this comment'), 'check-ham' );
+        if ( $comment->comment_approved == 'spam' ) {
+          if ( wp_blacklist_check($comment->comment_author, $comment->comment_author_email, $comment->comment_author_url, $comment->comment_content, $comment->comment_author_IP, $comment->comment_agent) )
+            classifyr_update_comment_history( $comment->comment_ID, __('Comment was caught by wp_blacklist_check'), 'wp-blacklisted' );
+          else
+            classifyr_update_comment_history( $comment->comment_ID, sprintf( __('Comment status was changed to %s'), $comment->comment_approved), 'status-changed-'.$comment->comment_approved );
+        }
 				// abnormal result: error
-				} else {
-					update_comment_meta( $comment->comment_ID, 'classifyr_error', time() );
-					classifyr_update_comment_history( $comment->comment_ID, sprintf( __('Classifyr was unable to check this comment (response: %s), will automatically retry again later.'), substr($classifyr_last_comment['classifyr_result'], 0, 50)), 'check-error' );
-				}
+      } elseif ( $classifyr_last_comment['classifyr_result'] == "unknown" ) {
+        classifyr_update_comment_history( $comment->comment_ID, __('Human intervention required'));
+      } else {
+        update_comment_meta( $comment->comment_ID, 'classifyr_error', time() );
+        classifyr_update_comment_history( $comment->comment_ID, sprintf( __('Classifyr was unable to check this comment (response: %s), will automatically retry again later.'), substr($classifyr_last_comment['classifyr_result'], 0, 50)), 'check-error' );
+      }
 				
-				// record the complete original data as submitted for checking
-				if ( isset($classifyr_last_comment['comment_as_submitted']) )
-					update_comment_meta( $comment->comment_ID, 'classifyr_as_submitted', $classifyr_last_comment['comment_as_submitted'] );
+      // record the complete original data as submitted for checking
+      if ( isset($classifyr_last_comment['comment_as_submitted']) )
+        update_comment_meta( $comment->comment_ID, 'classifyr_as_submitted', $classifyr_last_comment['comment_as_submitted'] );
 		}
 	}
 }
@@ -463,7 +465,7 @@ function classifyr_delete_old_metadata() {
 	$interval = apply_filters( 'classifyr_delete_commentmeta_interval', 15 );
 
 	# enfore a minimum of 1 day
-	$interval = absint( $interval );
+    $interval = absint( $interval );
 	if ( $interval < 1 ) {
 		return;
 	}
@@ -483,10 +485,10 @@ function classifyr_delete_old_metadata() {
 	}
 
 	/*
-	$n = mt_rand( 1, 5000 ); 
-	if ( apply_filters( 'classifyr_optimize_table', ( $n == 11 ), 'commentmeta' ) ) { // lucky number 
+    $n = mt_rand( 1, 5000 ); 
+    if ( apply_filters( 'classifyr_optimize_table', ( $n == 11 ), 'commentmeta' ) ) { // lucky number 
 		$wpdb->query( "OPTIMIZE TABLE $wpdb->commentmeta" ); 
-	}
+    }
 	*/
 } 
 
@@ -494,21 +496,21 @@ add_action('classifyr_scheduled_delete', 'classifyr_delete_old');
 add_action('classifyr_scheduled_delete', 'classifyr_delete_old_metadata'); 
 
 function classifyr_check_db_comment( $id, $recheck_reason = 'recheck_queue' ) {
-    global $wpdb, $classifyr_api_host, $classifyr_api_port;
+  global $wpdb, $classifyr_api_host, $classifyr_api_port;
 
-    $id = (int) $id;
-    $c = $wpdb->get_row( "SELECT * FROM $wpdb->comments WHERE comment_ID = '$id'", ARRAY_A );
-    if ( !$c )
-        return;
+  $id = (int) $id;
+  $c = $wpdb->get_row( "SELECT * FROM $wpdb->comments WHERE comment_ID = '$id'", ARRAY_A );
+  if ( !$c )
+    return;
 
-    $c['user_ip']    = $c['comment_author_IP'];
-    $c['user_agent'] = $c['comment_agent'];
-    $c['referrer']   = '';
-    $c['blog']       = get_option('home');
-    $c['blog_lang']  = get_locale();
-    $c['blog_charset'] = get_option('blog_charset');
-    $c['permalink']  = get_permalink($c['comment_post_ID']);
-    $id = $c['comment_ID'];
+  $c['user_ip']    = $c['comment_author_IP'];
+  $c['user_agent'] = $c['comment_agent'];
+  $c['referrer']   = '';
+  $c['blog']       = get_option('home');
+  $c['blog_lang']  = get_locale();
+  $c['blog_charset'] = get_option('blog_charset');
+  $c['permalink']  = get_permalink($c['comment_post_ID']);
+  $id = $c['comment_ID'];
 	if ( classifyr_test_mode() )
 		$c['is_test'] = 'true';
 	$c['recheck_reason'] = $recheck_reason;
@@ -552,7 +554,9 @@ function classifyr_cron_recheck() {
 			$msg = __( 'Classifyr caught this comment as spam during an automatic retry.' );
 		} elseif ( $status == 'ham' ) {
 			$msg = __( 'Classifyr cleared this comment during an automatic retry.' );
-		}
+		} elseif ( $status == "unknown" ) {
+      $msg = __( 'Needs human intervention.' );
+    }
 		
 		// If we got back a legit response then update the comment history
 		// other wise just bail now and try again later.  No point in
