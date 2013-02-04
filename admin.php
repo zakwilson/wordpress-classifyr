@@ -683,11 +683,13 @@ function classifyr_spam_count( $type = false ) {
 }
 
 function classifyr_learn_approved() {
+  global $wpdb, $classifyr_api_host, $classifyr_api_port;
+
 	if ( !( isset( $_REQUEST['action'] ) && 'classifyr_learn_approved' == $_REQUEST['action'] ) )
 		return;
 
   $approved = $wpdb->get_results( "SELECT * FROM $wpdb->comments WHERE comment_approved = '1'", ARRAY_A );
-	foreach ( (array) $moderation as $c ) {
+	foreach ( (array) $approved as $c ) {
 		$c['user_ip']    = $c['comment_author_IP'];
 		$c['user_agent'] = $c['comment_agent'];
 		$c['referrer']   = '';
